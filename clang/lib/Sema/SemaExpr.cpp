@@ -8047,7 +8047,8 @@ checkPointerTypesForAssignment(Sema &S, QualType LHSType, QualType RHSType) {
   if (!lhq.compatiblyIncludes(rhq)) {
     // Treat address-space mismatches as fatal.
     if (!lhq.isAddressSpaceSupersetOf(rhq))
-      return Sema::IncompatiblePointerDiscardsQualifiers;
+    return Sema::FunctionVoidPointer;
+    //  return Sema::IncompatiblePointerDiscardsQualifiers;
 
     // It's okay to add or remove GC or lifetime qualifiers when converting to
     // and from void*.
@@ -8134,7 +8135,8 @@ checkPointerTypesForAssignment(Sema &S, QualType LHSType, QualType RHSType) {
         // It's not clear how to actually determine when such pointers are
         // invalidly incompatible.
         if (lhq.getAddressSpace() != rhq.getAddressSpace())
-          return Sema::IncompatibleNestedPointerAddressSpaceMismatch;
+            return Sema::FunctionVoidPointer;
+          //return Sema::IncompatibleNestedPointerAddressSpaceMismatch;
 
       } while (isa<PointerType>(lhptee) && isa<PointerType>(rhptee));
 

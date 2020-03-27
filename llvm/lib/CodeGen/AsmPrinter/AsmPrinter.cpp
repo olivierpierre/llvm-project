@@ -2283,6 +2283,24 @@ const MCExpr *AsmPrinter::lowerConstant(const Constant *CV) {
     return lowerConstant(Op);
   }
 
+  case Instruction::AddrSpaceCast: {
+    PointerType *DstTy            = cast<PointerType>(CE->getType());
+    PointerType *SrcTy            = cast<PointerType>(CE->getOperand(0)->getType());
+    if (SrcTy->getAddressSpace() == 0 && DstTy->getAddressSpace() == 256) {
+      return lowerConstant(cast<const Constant>(CE->getOperand(0)));
+    }
+
+    // Otherwise report the problem to the user.
+    std::string S;
+    raw_string_ostream OS(S);
+    OS << "SHIT Unsupported expression in static initializer: ";
+    CE->printAsOperand(OS, /*PrintType=*/false,
+                   !MF ? nullptr : MF->getFunction().getParent());
+    report_fatal_error(OS.str());
+
+  }
+
+
   case Instruction::PtrToInt: {
     const DataLayout &DL = getDataLayout();
 
