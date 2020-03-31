@@ -6,6 +6,6 @@ mkdir build
 mkdir prefix
 
 cd build
-cmake -G "Unix Makefiles" -DLLVM_ENABLE_PROJECTS=clang -DCMAKE_INSTALL_PREFIX=$PWD/../prefix -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_USE_LINKER=lld ../llvm
+cmake -G "Unix Makefiles" -DLLVM_ENABLE_PROJECTS=clang -DCMAKE_INSTALL_PREFIX=$PWD/../prefix -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_USE_LINKER=lld -DLLVM_ENABLE_RTTI=true ../llvm
 make -j`nproc` install
 cd -
