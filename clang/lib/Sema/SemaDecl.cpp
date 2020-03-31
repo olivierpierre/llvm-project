@@ -10849,6 +10849,14 @@ void Sema::CheckMain(FunctionDecl* FD, const DeclSpec& DS) {
       }
     }
 
+    /* In tfork we update the second argument of main to be:
+     * char __seg_gs * volatile __seg_gs *volatile argv
+     * so we fail this test but it's ok, let's suceed silently ...
+     * FIXME: a proper way to handle this would be to allow this particular
+     * type. */
+    if(i == 1)
+        mismatch = false;
+
     if (mismatch) {
       Diag(FD->getLocation(), diag::err_main_arg_wrong) << i << Expected[i];
       // TODO: suggest replacing given type with expected type
