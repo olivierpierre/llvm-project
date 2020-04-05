@@ -1378,8 +1378,12 @@ void CodeGenFunction::EmitAndRegisterVariableArrayDimensions(
 CodeGenFunction::AutoVarEmission
 CodeGenFunction::EmitAutoVarAlloca(const VarDecl &D) {
   QualType Ty = D.getType();
+
+  /* With tfork we will have stack variable of address space 256 */
   assert(
       Ty.getAddressSpace() == LangAS::Default ||
+      static_cast<int>(Ty.getAddressSpace()) ==
+      static_cast<int>(LangAS::FirstTargetAddressSpace) + 256 || /* tfork */
       (Ty.getAddressSpace() == LangAS::opencl_private && getLangOpts().OpenCL));
 
   AutoVarEmission emission(D);

@@ -7638,8 +7638,13 @@ void Sema::CheckVariableDeclarationType(VarDecl *NewVD) {
   // This includes arrays of objects with address space qualifiers, but not
   // automatic variables that point to other address spaces.
   // ISO/IEC TR 18037 S5.1.2
+  // For tfork we disable this check, local variables can belong to address
+  // space 256
   if (!getLangOpts().OpenCL && NewVD->hasLocalStorage() &&
-      T.getAddressSpace() != LangAS::Default) {
+      T.getAddressSpace() != LangAS::Default &&
+      static_cast<int>(T.getAddressSpace()) !=
+          static_cast<int>(LangAS::FirstTargetAddressSpace) + 256
+      ) {
     Diag(NewVD->getLocation(), diag::err_as_qualified_auto_decl) << 0;
     NewVD->setInvalidDecl();
     return;
