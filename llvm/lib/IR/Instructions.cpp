@@ -394,10 +394,14 @@ void CallInst::init(FunctionType *FTy, Value *Func, ArrayRef<Value *> Args,
           (FTy->isVarArg() && Args.size() > FTy->getNumParams())) &&
          "Calling a function with bad signature!");
 
-  for (unsigned i = 0; i != Args.size(); ++i)
-    assert((i >= FTy->getNumParams() ||
+  for (unsigned i = 0; i != Args.size(); ++i) {
+      /* tfork */
+      if(!(Args[i]->getType()->isPointerTy() &&
+              Args[i]->getType()->getPointerAddressSpace() == 256))
+        assert((i >= FTy->getNumParams() ||
             FTy->getParamType(i) == Args[i]->getType()) &&
            "Calling a function with a bad signature!");
+    }
 #endif
 
   llvm::copy(Args, op_begin());
