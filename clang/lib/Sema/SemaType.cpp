@@ -6151,11 +6151,15 @@ static void HandleAddressSpaceTypeAttribute(QualType &Type,
 
   // ISO/IEC TR 18037 S5.3 (amending C99 6.7.3): "A function type shall not be
   // qualified by an address-space qualifier."
+  // In tfork we actually allow that only for address space 256 so this check
+  // is delayed until we know which address space is involved here
+#if 0
   if (Type->isFunctionType()) {
     S.Diag(Attr.getLoc(), diag::err_attribute_address_function_type);
     Attr.setInvalid();
     return;
   }
+#endif
 
   LangAS ASIdx;
   if (Attr.getKind() == ParsedAttr::AT_AddressSpace) {
@@ -6224,6 +6228,19 @@ static void HandleAddressSpaceTypeAttribute(QualType &Type,
   } else {
     // The keyword-based type attributes imply which address space to use.
     ASIdx = Attr.asOpenCLLangAS();
+
+
+    /* Tfork: if address space is not 256 and it is applied on a function
+     * pointer, error */
+    if (static_cast<int>(ASIdx) !=
+            static_cast<int>(LangAS::FirstTargetAddressSpace) + 256 &&
+            Type->isFunctionType()) {
+        S.Diag(Attr.getLoc(), diag::err_attribute_address_function_type);
+        Attr.setInvalid();
+        return;
+      }
+
+
     if (ASIdx == LangAS::Default)
       llvm_unreachable("Invalid address space");
 
