@@ -4034,6 +4034,7 @@ void SelectionDAGBuilder::visitAlloca(const AllocaInst &I) {
   assert(FuncInfo.MF->getFrameInfo().hasVarSizedObjects());
 }
 
+// PIerre
 void SelectionDAGBuilder::visitLoad(const LoadInst &I) {
   if (I.isAtomic())
     return visitAtomicLoad(I);
@@ -4057,6 +4058,15 @@ void SelectionDAGBuilder::visitLoad(const LoadInst &I) {
   SDValue Ptr = getValue(SV);
 
   Type *Ty = I.getType();
+
+  //Pierre: this is too brutal
+  // But maybe we should mark things here for later generation of gs: code
+#if 0
+  if(Ty->getTypeID() == Type::PointerTyID) {
+    PointerType *ptrtype = static_cast<PointerType *>(Ty);
+    ptrtype->setAddressSpace(256);
+  }
+#endif
 
   bool isVolatile = I.isVolatile();
   bool isNonTemporal = I.hasMetadata(LLVMContext::MD_nontemporal);

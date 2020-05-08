@@ -845,11 +845,15 @@ redo_gep:
     U = C;
   }
 
-  if (PointerType *Ty = dyn_cast<PointerType>(V->getType()))
+  if (PointerType *Ty = dyn_cast<PointerType>(V->getType())) {
+      // Pierre: force the slow path as the fast instruction selection does
+      // not support special address spaces
+       return false;
     if (Ty->getAddressSpace() > 255)
       // Fast instruction selection doesn't support the special
       // address spaces.
       return false;
+  }
 
   switch (Opcode) {
   default: break;
@@ -1135,8 +1139,11 @@ bool X86FastISel::X86SelectStore(const Instruction *I) {
   bool Aligned = Alignment >= ABIAlignment;
 
   X86AddressMode AM;
-  if (!X86SelectAddress(Ptr, AM))
+  if (!X86SelectAddress(Ptr, AM)) {
+//    fprintf(stderr, "failed: ");
+//    I->dump();
     return false;
+  }
 
   return X86FastEmitStore(VT, Val, AM, createMachineMemOperandFor(I), Aligned);
 }
@@ -1319,8 +1326,11 @@ bool X86FastISel::X86SelectLoad(const Instruction *I) {
   const Value *Ptr = LI->getPointerOperand();
 
   X86AddressMode AM;
-  if (!X86SelectAddress(Ptr, AM))
+  if (!X86SelectAddress(Ptr, AM)) {
+//      fprintf(stderr, "failed: ");
+//      I->dump();
     return false;
+  }
 
   unsigned Alignment = LI->getAlignment();
   unsigned ABIAlignment = DL.getABITypeAlignment(LI->getType());
