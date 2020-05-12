@@ -1,0 +1,22 @@
+CC=../../../../llvm-project/prefix/bin/clang
+TARGET=prog
+
+SRC=$(wildcard *.c)
+OBJS=$(SRC:.c=.o)
+
+CFLAGS = -std=gnu99 -fpie -g -fno-omit-frame-pointer -fno-stack-protector -O3
+LDFLAGS = -lm -pie -rdynamic
+
+all: $(TARGET)
+
+$(TARGET): $(SRC)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+objdump: $(TARGET)
+	objdump --source $(TARGET) > /tmp/objdump.txt && vim /tmp/objdump.txt
+
+test: $(TARGET)
+	./$(TARGET)
+
+clean:
+	rm -rf *.o $(TARGET)
