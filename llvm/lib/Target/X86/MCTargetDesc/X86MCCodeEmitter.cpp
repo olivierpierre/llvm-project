@@ -30,6 +30,8 @@
 #include <cstdint>
 #include <cstdlib>
 
+#define PIP_ENABLED 1
+
 using namespace llvm;
 
 #define DEBUG_TYPE "mccodeemitter"
@@ -120,7 +122,8 @@ private:
                            raw_ostream &OS) const;
 
   void emitSegmentOverridePrefix(unsigned &CurByte, unsigned SegOperand,
-                                 const MCInst &MI, raw_ostream &OS) const;
+                                 const MCInst &MI, raw_ostream &OS,
+                                 bool tforkify) const;
 
   bool emitOpcodePrefix(uint64_t TSFlags, unsigned &CurByte, int MemOperand,
                         const MCInst &MI, const MCInstrDesc &Desc,
@@ -643,9 +646,21 @@ void X86MCCodeEmitter::emitPrefixImpl(uint64_t TSFlags, unsigned &CurOp,
     MemoryOperand += CurOp;
 
   // Emit segment override opcode prefix as needed.
-  if (MemoryOperand >= 0)
+  if (MemoryOperand >= 0) {
+    bool tfork = false;
+
+#if PIP_ENABLED != 0
+      tfork = true;
+      if(MI.getOperand(MemoryOperand).isReg() && (
+                  MI.getOperand(MemoryOperand).getReg() == X86::RBP ||
+                  MI.getOperand(MemoryOperand).getReg() == X86::RIP))
+          tfork = false;
+#endif
+
+
     emitSegmentOverridePrefix(CurByte, MemoryOperand + X86::AddrSegmentReg, MI,
-                              OS);
+                              OS, tfork);
+  }
 
   // Emit the repeat opcode prefix as needed.
   unsigned Flags = MI.getFlags();
@@ -696,8 +711,10 @@ void X86MCCodeEmitter::emitPrefixImpl(uint64_t TSFlags, unsigned &CurOp,
             (siReg == X86::RSI && MI.getOperand(0).getReg() == X86::RDI)) &&
            "SI and DI register sizes do not match");
     // Emit segment override opcode prefix as needed (not for %ds).
-    if (MI.getOperand(2).getReg() != X86::DS)
-      emitSegmentOverridePrefix(CurByte, 2, MI, OS);
+    if (MI.getOperand(2).getReg() != X86::DS) {
+      assert(0 && "tfork check here do we need to GS: something?");
+      emitSegmentOverridePrefix(CurByte, 2, MI, OS, 0);
+    }
     // Emit AdSize prefix as needed.
     if ((!STI.hasFeature(X86::Mode32Bit) && siReg == X86::ESI) ||
         (STI.hasFeature(X86::Mode32Bit) && siReg == X86::SI))
@@ -708,8 +725,10 @@ void X86MCCodeEmitter::emitPrefixImpl(uint64_t TSFlags, unsigned &CurOp,
   case X86II::RawFrmSrc: {
     unsigned siReg = MI.getOperand(0).getReg();
     // Emit segment override opcode prefix as needed (not for %ds).
-    if (MI.getOperand(1).getReg() != X86::DS)
-      emitSegmentOverridePrefix(CurByte, 1, MI, OS);
+    if (MI.getOperand(1).getReg() != X86::DS) {
+      assert(0 && "tfork check here do we need to GS: something?");
+      emitSegmentOverridePrefix(CurByte, 1, MI, OS, 0);
+    }
     // Emit AdSize prefix as needed.
     if ((!STI.hasFeature(X86::Mode32Bit) && siReg == X86::ESI) ||
         (STI.hasFeature(X86::Mode32Bit) && siReg == X86::SI))
@@ -727,8 +746,9 @@ void X86MCCodeEmitter::emitPrefixImpl(uint64_t TSFlags, unsigned &CurOp,
     break;
   }
   case X86II::RawFrmMemOffs: {
+    assert(0 && "tfork check here do we need to GS: something?");
     // Emit segment override opcode prefix as needed.
-    emitSegmentOverridePrefix(CurByte, 1, MI, OS);
+    emitSegmentOverridePrefix(CurByte, 1, MI, OS, 0);
     break;
   }
   }
@@ -1258,7 +1278,15 @@ uint8_t X86MCCodeEmitter::determineREXPrefix(const MCInst &MI, uint64_t TSFlags,
 void X86MCCodeEmitter::emitSegmentOverridePrefix(unsigned &CurByte,
                                                  unsigned SegOperand,
                                                  const MCInst &MI,
-                                                 raw_ostream &OS) const {
+                                                 raw_ostream &OS,
+                                                 bool tforkify) const {
+
+  if(tforkify) {
+    assert(MI.getOperand(SegOperand).getReg() == 0);
+    emitByte(0x65, CurByte, OS);
+    return;
+  }
+
   // Check for explicit segment override on memory operand.
   switch (MI.getOperand(SegOperand).getReg()) {
   default:
@@ -1783,5 +1811,10 @@ void X86MCCodeEmitter::encodeInstruction(const MCInst &MI, raw_ostream &OS,
 MCCodeEmitter *llvm::createX86MCCodeEmitter(const MCInstrInfo &MCII,
                                             const MCRegisterInfo &MRI,
                                             MCContext &Ctx) {
+#if PIP_ENABLED != 0
+    fprintf(stderr, "PIP enabled\n");
+#else
+    fprintf(stderr, "PIP disabled\n");
+#endif
   return new X86MCCodeEmitter(MCII, Ctx);
 }
