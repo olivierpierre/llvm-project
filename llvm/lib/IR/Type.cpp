@@ -656,6 +656,10 @@ PointerType::PointerType(Type *E, unsigned AddrSpace)
   setSubclassData(AddrSpace);
 }
 
+void PointerType::setAddressSpace(unsigned AddrSpace) {
+  setSubclassData(AddrSpace);
+}
+
 PointerType *Type::getPointerTo(unsigned addrs) const {
   return PointerType::get(const_cast<Type*>(this), addrs);
 }

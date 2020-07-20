@@ -4410,6 +4410,7 @@ bool X86DAGToDAGISel::tryMatchBitSelect(SDNode *N) {
   return true;
 }
 
+// PIerre
 void X86DAGToDAGISel::Select(SDNode *Node) {
   MVT NVT = Node->getSimpleValueType(0);
   unsigned Opcode = Node->getOpcode();

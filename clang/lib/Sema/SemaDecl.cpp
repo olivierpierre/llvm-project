@@ -16172,6 +16172,7 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
     }
   }
 
+#if 0
   // TR 18037 does not allow fields to be declared with address space
   if (T.hasAddressSpace() || T->isDependentAddressSpaceType() ||
       T->getBaseElementTypeUnsafe()->isDependentAddressSpaceType()) {
@@ -16179,6 +16180,7 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
     Record->setInvalidDecl();
     InvalidDecl = true;
   }
+#endif
 
   if (LangOpts.OpenCL) {
     // OpenCL v1.2 s6.9b,r & OpenCL v2.0 s6.12.5 - The following types cannot be

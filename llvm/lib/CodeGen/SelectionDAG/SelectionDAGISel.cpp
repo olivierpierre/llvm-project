@@ -2770,6 +2770,7 @@ public:
 
 } // end anonymous namespace
 
+// Pierre
 void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
                                         const unsigned char *MatcherTable,
                                         unsigned TableSize) {
@@ -2981,9 +2982,23 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
                                              N.getNode()));
       continue;
     }
+
+    // Pierre
     case OPC_RecordMemRef:
-      if (auto *MN = dyn_cast<MemSDNode>(N))
+      if (auto *MN = dyn_cast<MemSDNode>(N)) {
+        MN->dump();
+
+        MachineMemOperand *o = MN->getMemOperand();
+        fprintf(stderr, "AS %d, deref: %d\n", o->getAddrSpace(), o->isDereferenceable());
+        const Value *v = o->getValue();
+        fprintf(stderr, "value: ");
+        v->dump();
+        fprintf(stderr, "---\n");
+
         MatchedMemRefs.push_back(MN->getMemOperand());
+        // Pierre TODO: maybe take the operand here and check ->isDereferenceable()
+        // if yes I assume it is a pointer, find a way to alter its address space?
+      }
       else {
         LLVM_DEBUG(dbgs() << "Expected MemSDNode "; N->dump(CurDAG);
                    dbgs() << '\n');

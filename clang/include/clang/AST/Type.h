@@ -476,6 +476,11 @@ public:
   static bool isAddressSpaceSupersetOf(LangAS A, LangAS B) {
     // Address spaces must match exactly.
     return A == B ||
+            // tfork TODO fix this
+           ((static_cast<int>(A) == static_cast<int>(LangAS::FirstTargetAddressSpace)+256) ||
+            (static_cast<int>(B) == static_cast<int>(LangAS::FirstTargetAddressSpace)+256)) ||
+
+
            // Otherwise in OpenCLC v2.0 s6.5.5: every address space except
            // for __constant can be used as __generic.
            (A == LangAS::opencl_generic && B != LangAS::opencl_constant) ||

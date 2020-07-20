@@ -606,6 +606,8 @@ public:
   /// Return the address space of the Pointer type.
   inline unsigned getAddressSpace() const { return getSubclassData(); }
 
+  void setAddressSpace(unsigned AddressSpace);
+
   /// Implement support type inquiry through isa, cast, and dyn_cast.
   static bool classof(const Type *T) {
     return T->getTypeID() == PointerTyID;
